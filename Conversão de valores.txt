@@ -1,0 +1,5 @@
+Conversão de valores VB6
+
+Val()  - Converte para Inteiro
+CDbl() - Converte para Double
+Str()  - Converte para String

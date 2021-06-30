@@ -1,0 +1,130 @@
+'Teste Bruno
+Private Sub RemoverDuplicidade()
+
+    'Define as variáveis
+    Dim SQL
+    Dim rsProdutosDuplicados As New Recordset
+    Dim rsProdutosComMesmoCB As New Recordset
+    Dim rsAtualizarProduto As New Recordset
+    
+    SQL = "SELECT codigobarrasprincipal," & vbNewLine
+    SQL = SQL & "      Count(*) as 'repetcoes' " & vbNewLine
+    SQL = SQL & "FROM ProdutosItens" & vbNewLine
+    SQL = SQL & "WHERE CodigoBarrasPrincipal <> ''" & vbNewLine
+    SQL = SQL & "GROUP BY codigobarrasprincipal" & vbNewLine
+    SQL = SQL & "HAVING Count(*) > 1 "
+    
+    If rsProdutosDuplicados.State = 1 Then rsProdutosDuplicados.Close
+    rsProdutosDuplicados.Open SQL, SAGEDLL.CNBDADOS, adOpenForwardOnly, adLockReadOnly
+    SQL = ""
+    
+    ' 1° Nivel - Verifica se existem produtos com código de barras Duplicados
+    Do While Not rsProdutosDuplicados.EOF
+
+        SQL = "Select Produtos.Codigo, ProdutosItens.CodigoBarrasPrincipal" & vbNewLine
+        SQL = SQL & "From Produtos" & vbNewLine
+        SQL = SQL & "INNER JOIN ProdutosItens ON Produtos.Codigo = ProdutosItens.CodigoProduto" & vbNewLine
+        SQL = SQL & "where CodigoBarrasPrincipal = '" & rsProdutosDuplicados("codigobarrasprincipal") & "'"
+        
+        If rsProdutosComMesmoCB.State = 1 Then rsProdutosComMesmoCB.Close
+        rsProdutosComMesmoCB.Open SQL, SAGEDLL.CNBDADOS, adOpenForwardOnly, adLockOptimistic
+        
+        ' 2° Nivel - Verifica se existem produtos com código de barras Duplicados
+        Dim i As Integer
+        For i = 1 To Val(rsProdutosDuplicados("repetcoes")) - 1
+            rsProdutosComMesmoCB("CodigoBarrasPrincipal") = ""
+            rsProdutosComMesmoCB.MoveNext
+        Next
+
+        rsProdutosDuplicados.MoveNext
+    Loop
+    
+    'No Sage utiliza esse método para finalizar o recordset
+    RecordsetFinaliza rsProdutosDuplicados
+    RecordsetFinaliza rsProdutosComMesmoCB
+    
+End Sub
+'FIM teste Bruno
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'Teste Bruno
+Private Sub RemoverDuplicidade()
+
+    'Define as variáveis
+    Dim SQL
+    Dim rsProdutosDuplicados As New Recordset
+    Dim rsProdutosComMesmoCB As New Recordset
+    Dim rsAtualizarProduto As New Recordset
+    
+    SQL = "SELECT codigobarrasprincipal," & vbNewLine
+    SQL = SQL & "      Count(*) as 'repetcoes' " & vbNewLine
+    SQL = SQL & "FROM ProdutosItens" & vbNewLine
+    SQL = SQL & "WHERE CodigoBarrasPrincipal <> ''" & vbNewLine
+    SQL = SQL & "GROUP BY codigobarrasprincipal" & vbNewLine
+    SQL = SQL & "HAVING Count(*) > 1 "
+    
+    If rsProdutosDuplicados.State = 1 Then rsProdutosDuplicados.Close
+    rsProdutosDuplicados.Open SQL, SAGEDLL.CNBDADOS, adOpenForwardOnly, adLockReadOnly
+    SQL = ""
+    
+    ' 1° Nivel - Verifica se existem produtos com código de barras Duplicados
+    Do While Not rsProdutosDuplicados.EOF
+
+        SQL = "Select Produtos.Codigo, ProdutosItens.CodigoBarrasPrincipal," & vbNewLine
+        SQL = "Select Produtos.Situacao, ProdutosItens.EstoqueInterno" & vbNewLine
+        SQL = SQL & "From Produtos" & vbNewLine
+        SQL = SQL & "INNER JOIN ProdutosItens ON Produtos.Codigo = ProdutosItens.CodigoProduto" & vbNewLine
+        SQL = SQL & "where CodigoBarrasPrincipal = '" & rsProdutosDuplicados("codigobarrasprincipal") & "'"
+        
+        If rsProdutosComMesmoCB.State = 1 Then rsProdutosComMesmoCB.Close
+        rsProdutosComMesmoCB.Open SQL, SAGEDLL.CNBDADOS, adOpenForwardOnly, adLockOptimistic
+        
+        ' 2° Nivel - Verifica se existem produtos com código de barras Duplicados
+        Dim i As Integer
+        For i = 1 To Val(rsProdutosDuplicados("repetcoes")) - 1
+            'rsProdutosComMesmoCB("CodigoBarrasPrincipal") = ""
+            'rsProdutosComMesmoCB.MoveNext
+            
+        Next
+
+        rsProdutosDuplicados.MoveNext
+    Loop
+    
+    'No Sage utiliza esse método para finalizar o recordset
+    RecordsetFinaliza rsProdutosDuplicados
+    RecordsetFinaliza rsProdutosComMesmoCB
+    
+End Sub
+'FIM teste Bruno

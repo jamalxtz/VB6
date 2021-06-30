@@ -1,0 +1,28 @@
+Sub MAIN()
+
+
+
+
+
+
+
+
+   Dim D as Date
+   D=Now()
+
+
+   .........
+
+
+
+   D=Now()-D
+   MsgBox D
+
+
+
+
+
+
+
+
+End Sub

@@ -1,0 +1,34 @@
+Exemplo de uso do Dictionary
+
+'Declara um novo Dictionary
+Dim dicFrete As New Dictionary
+Dim keyArray, keyAtual
+
+With dicFrete
+	'Define o modo de comparação
+	.CompareMode = BinaryCompare
+	'Verifica se existe a chave (CFOP)
+	If .Exists(CFOPProduto) Then
+		'Incrementa o valor do frete na chave do CFOP
+		.item(CFOPProduto) = .item(CFOPProduto) + rsEntradaProdutos("ValorFrete")
+	Else
+		'Cria a chave com a key (CFOP) e o Item com o valor do frete
+		.Add CFOPProduto, rsEntradaProdutos("ValorFrete")
+	End If
+End With
+
+'Armazena as chaves do dicionario em um array (obs da pra fazer a mesma coisa com os valores ao inves da chave, basta trocar o keys por itens)
+keyArray = dicFrete.keys
+'Percorre o array fazendo as iterações com ele.
+For Each keyAtual In keyArray
+	'Verifica se o valor do dicionario na posição em que está a key atual é maior do que zero(0)
+	If CCur(dicFrete.item(keyAtual)) > CCur(0) Then
+		'Imprime a Key atual (Nesse exemplo irá imprimir o CFOP que está sendo iterado pelo for each)
+		keyAtual
+		'Imprime o valor que está armazenado na chave atual.
+		dicFrete.item(keyAtual)
+	End If
+Next
+'Limpa o dicionario
+dicFrete.RemoveAll
+Set dicFrete = Nothing

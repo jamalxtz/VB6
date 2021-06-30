@@ -1,0 +1,7 @@
+If SAGEDLL.USPERMISSAOconcessao("VERIFICAR", "CADASTRO - PRODUTOS", "LIBERAR PRODUTO DUPLICADO", "CÓDIGO PRODUTO = " & txtCodigo) = False Then
+	If SAGEDLL.USPERMISSAOverificar("CADASTRO - PRODUTOS", "LIBERAR PRODUTO DUPLICADO", "CÓDIGO PRODUTO = " & txtCodigo, , True) = False Then
+		CampoCB.SetFocus
+		MSTISUB.TXTDestaca Me.ActiveControl
+		Exit Function
+	End If
+End If

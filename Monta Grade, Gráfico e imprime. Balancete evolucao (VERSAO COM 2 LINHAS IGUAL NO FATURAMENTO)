@@ -1,0 +1,470 @@
+vERSÃO FINAL, FUNCIONANDO 1000%
+
+'TAR:9332
+Public Sub LimpaGradeGraficoEvolucao()
+
+    grdEvolucao.Clear
+    grdEvolucao.rows = 2
+    grdEvolucao.FixedRows = 1
+    chrGrafico.ColumnCount = 0
+    chrGrafico.RowCount = 0
+    MSTIGRD.GRADEFLEX_Cabecalho grdEvolucao, "Conta Contábil;Período", "1500;1000"
+    grdEvolucao.COL = 0
+    grdEvolucao.CellBackColor = vbWhite
+
+End Sub
+
+'TAR:9332
+Public Sub MontaGradeGraficoEvolucao()
+
+    Dim Dados() As dadosEvolucao
+    Dim SQLTotalProdutos As String, SqlWhere As String, SQLCampoData As String, SQL As String
+    Dim Linhas As Integer, i As Integer, Y As Integer
+    Dim rsDadosEvolucao As New Recordset
+    Dim rsContasContabeis As New Recordset
+    Dim Periodos As Long, PeriodoAnual As Boolean
+
+    Periodos = DateDiff("m", txtPDataInicial, txtPDataFinal) + 1
+
+    If Periodos >= 24 Then
+        Periodos = DateDiff("yyyy", txtPDataInicial, txtPDataFinal) + 1
+        PeriodoAnual = True
+    End If
+    
+    grdEvolucao.Redraw = False
+
+    If rsContasContabeis.State = 1 Then rsContasContabeis.Close
+    rsContasContabeis.Open "SELECT CodigoContaContabil,IDENTIFICADOR, CONTACONTABIL, SUM(totalCREDITO) AS CREDITO, SUM(totalDEBITO) AS DEBITO, SUM(totalSALDO) AS RESULTADO, SUM(SUB.Pendente) PENDENTE, CASE WHEN (SELECT ContaResultado FROM ContasContabeis WHERE Codigo = CodigoContaContabil) = 'NENHUMA' THEN NULL ELSE SUM(FAT) END AS FAT,  ((SUM(TotalSALDO)+SUM(SUB.Pendente)) / " & iMes & ") AS MEDIA, CASE WHEN (SELECT ContaResultado FROM ContasContabeis WHERE Codigo = CodigoContaContabil) = 'NENHUMA' THEN NULL ELSE MAX(SUB.Orcado) END ORÇADO, CASE WHEN (SELECT ContaResultado FROM ContasContabeis WHERE Codigo = CodigoContaContabil) = 'NENHUMA' THEN NULL ELSE ((SUM(TotalSALDO)+SUM(SUB.Pendente)) / " & iMes & ") - MAX(SUB.Orcado) END DIFERENÇA FROM (" & GeraConsultaEvolucao & ") AS SUB GROUP BY CodigoContaContabil,IDENTIFICADOR, CONTACONTABIL", SAGEDLL.CNBDADOS, adOpenStatic
+    
+    
+    Linhas = (rsContasContabeis.RecordCount * 2) + 1
+    ReDim Dados(rsContasContabeis.RecordCount - 1)
+
+    Dim ColunaValores As Integer, MaxColunaValores As Integer
+    MaxColunaValores = (Periodos * 2) - 1
+
+    grdEvolucao.Cols = Periodos + 1
+    grdEvolucao.rows = Linhas
+    grdEvolucao.ColWidth(0) = 1740
+    grdEvolucao.FixedRows = 1
+    grdEvolucao.FixedCols = 1
+
+    i = 0
+    Do While Not rsContasContabeis.EOF
+        
+        ColunaValores = 1
+
+        MSTIGRD.GRADEFLEX_SetTexto grdEvolucao, rsContasContabeis("CONTACONTABIL"), (i * 2) + 1, 0, , ESQUERDA, , "BRANCO"
+        MSTIGRD.GRADEFLEX_SetTexto grdEvolucao, rsContasContabeis("CONTACONTABIL"), (i * 2) + 2, 0, , ESQUERDA, , "BRANCO"
+
+        Dados(i).ContaContabil = rsContasContabeis("CONTACONTABIL")
+
+        If PeriodoAnual Then
+            SQL = "WITH Months (date) " & vbNewLine
+            SQL = SQL & "AS( " & vbNewLine
+            SQL = SQL & "SELECT CAST('" & txtPDataInicial & "' AS DATETIME) " & vbNewLine
+            SQL = SQL & "UNION ALL " & vbNewLine
+            SQL = SQL & "SELECT DATEADD(year, 1, date) " & vbNewLine
+            SQL = SQL & "FROM Months " & vbNewLine
+            SQL = SQL & "WHERE DATEADD(year, 1, date) <= CAST('" & txtPDataFinal & "' AS DATETIME)) " & vbNewLine
+            SQL = SQL & "SELECT [Ano] = DATEPART(yy, date), " & vbNewLine
+            SQL = SQL & "[TotalTotal] = ( " & vbNewLine
+            SQL = SQL & "   SELECT Sum(totalsaldo) AS RESULTADO " & vbNewLine
+            SQL = SQL & "   FROM (" & GeraConsultaEvolucao("CALCULARTOTAIS") & ") AS SUB " & vbNewLine
+            SQL = SQL & "   WHERE CodigoContaContabil = " & rsContasContabeis("CodigoContaContabil") & vbNewLine
+            SQL = SQL & ") FROM Months" & vbNewLine
+        Else
+            SQL = "WITH Months (date) " & vbNewLine
+            SQL = SQL & "AS( " & vbNewLine
+            SQL = SQL & "SELECT CAST('" & txtPDataInicial & "' AS DATETIME) " & vbNewLine
+            SQL = SQL & "UNION ALL " & vbNewLine
+            SQL = SQL & "SELECT DATEADD(month, 1, date) " & vbNewLine
+            SQL = SQL & "FROM Months " & vbNewLine
+            SQL = SQL & "WHERE DATEADD(month, 1, date) <= CAST('" & txtPDataFinal & "' AS DATETIME)) " & vbNewLine
+            SQL = SQL & "SELECT [MesNome] = DATENAME(mm, date), [Mes] = DATEPART(mm, date), [Ano] = DATEPART(yy, date), " & vbNewLine
+            SQL = SQL & "[TotalTotal] = ( " & vbNewLine
+            SQL = SQL & "   SELECT Sum(totalsaldo) AS RESULTADO " & vbNewLine
+            SQL = SQL & "   FROM (" & GeraConsultaEvolucao("CALCULARTOTAIS") & ") AS SUB " & vbNewLine
+            SQL = SQL & "   WHERE CodigoContaContabil = " & rsContasContabeis("CodigoContaContabil") & vbNewLine
+            SQL = SQL & ") FROM Months" & vbNewLine
+        End If
+
+        If rsDadosEvolucao.State = 1 Then rsDadosEvolucao.Close
+        rsDadosEvolucao.Open SQL, SAGEDLL.CNBDADOS, adOpenDynamic
+
+        If Not (rsDadosEvolucao.EOF And rsDadosEvolucao.BOF) Then
+            ReDim Dados(i).TotaisTotal(Periodos - 1)
+            ReDim Dados(i).Periodo(Periodos - 1)
+            While Not (rsDadosEvolucao.EOF)
+
+                If PeriodoAnual Then
+                    MSTIGRD.GRADEFLEX_SetTexto grdEvolucao, rsDadosEvolucao("Ano"), 0, IIf(MaxColunaValores = 1, 1, ColunaValores), , CENTRALIZADO
+                    Dados(i).Periodo(ColunaValores - 1) = rsDadosEvolucao("Ano")
+                Else
+                    MSTIGRD.GRADEFLEX_SetTexto grdEvolucao, UCase(Left(rsDadosEvolucao("MesNome"), 3)) & "/" & Right(rsDadosEvolucao("Ano"), 2), 0, IIf(MaxColunaValores = 1, 1, ColunaValores), , CENTRALIZADO
+                    Dados(i).Periodo(ColunaValores - 1) = UCase(Left(rsDadosEvolucao("MesNome"), 3)) & "/" & Right(rsDadosEvolucao("Ano"), 2)
+                End If
+
+                MSTIGRD.GRADEFLEX_SetTexto grdEvolucao, (MSTIFUN.FORMATAValor(MSTIFUN.TrocaNV(rsDadosEvolucao("TotalTotal"), "0"))), (i * 2) + 1, IIf(MaxColunaValores = 1, 1, ColunaValores), , DIREITA
+
+                Dados(i).TotaisTotal(ColunaValores - 1) = (MSTIFUN.FORMATAValor(MSTIFUN.TrocaNV(rsDadosEvolucao("TotalTotal"), "0")))
+
+                If MaxColunaValores > 2 And ColunaValores > 1 Then
+                    Dim V1 As String, V2 As String, PercentualVariado As String
+                    V1 = MSTIGRD.GRADEFLEX_GetTexto(grdEvolucao, (i * 2) + 1, ColunaValores)
+                    V2 = MSTIGRD.GRADEFLEX_GetTexto(grdEvolucao, (i * 2) + 1, ColunaValores - 1)
+                    If CDbl(V1) = CDbl("0") Or CDbl(V2) = CDbl("0") Then
+                        If CDbl(V1) = CDbl("0") And CDbl(V2) > CDbl("0") Then
+                            MSTIGRD.GRADEFLEX_SetTexto grdEvolucao, MSTIFUN.FORMATAValor("-100") & " %", (i * 2) + 2, ColunaValores, , , "192"
+                        ElseIf CDbl(V1) > CDbl("0") And CDbl(V2) = CDbl("0") Then
+                            MSTIGRD.GRADEFLEX_SetTexto grdEvolucao, MSTIFUN.FORMATAValor("100") & " %", (i * 2) + 2, ColunaValores, , , "32768"
+                        Else
+                            MSTIGRD.GRADEFLEX_SetTexto grdEvolucao, MSTIFUN.FORMATAValor("0") & " %", (i * 2) + 2, ColunaValores
+                        End If
+                    Else
+                        PercentualVariado = MSTIFUN.FORMATAValor(((CDbl(V1) / CDbl(V2)) - 1) * 100)
+                        If CDbl(PercentualVariado) > CDbl(0) Then
+                            MSTIGRD.GRADEFLEX_SetTexto grdEvolucao, CStr(PercentualVariado) & " %", (i * 2) + 2, ColunaValores, , , "32768"
+                        Else
+                            MSTIGRD.GRADEFLEX_SetTexto grdEvolucao, CStr(PercentualVariado) & " %", (i * 2) + 2, ColunaValores, , , 192
+                        End If
+                    End If
+                End If
+                grdEvolucao.ColWidth(ColunaValores) = 1250
+                ColunaValores = ColunaValores + 1
+                rsDadosEvolucao.MoveNext
+            Wend
+        End If
+        i = i + 1
+        rsContasContabeis.MoveNext
+    Loop
+
+    With grdEvolucao
+        .MergeCol(0) = True
+    End With
+
+    grdEvolucao.Redraw = True
+
+    'MONTA GRÁFICO
+    If Periodos = 1 Then
+        chrGrafico.chartType = VtChChartType2dBar
+    Else
+        chrGrafico.chartType = VtChChartType2dLine
+    End If
+
+    chrGrafico.RowCount = Periodos
+    chrGrafico.ColumnCount = UBound(Dados) + 1
+    For i = 0 To UBound(Dados)
+        chrGrafico.Column = i + 1
+        chrGrafico.ColumnLabel = Dados(i).ContaContabil
+        For Y = 0 To UBound(Dados(i).TotaisTotal)
+            chrGrafico.Row = Y + 1
+            chrGrafico.Data = (Dados(i).TotaisTotal(Y))
+            chrGrafico.RowLabel = Dados(i).Periodo(Y)
+        Next
+    Next
+
+    Dim w As Long
+    For w = 1 To chrGrafico.Plot.Axis(1).Labels.Count
+       'Roda todos os eixos do gráfico, formatando-os
+       chrGrafico.Plot.Axis(1).Labels(w).Format = "###.###"
+    Next
+    
+    'Finaliza o Recordset com os dados da evolução e o recordset com os dados das contas contabeis montado na 'MontaGradeSintetica'
+    RecordsetFinaliza rsDadosEvolucao
+    RecordsetFinaliza rsContasContabeis
+
+End Sub
+
+'TAR:9332
+Public Function GeraConsultaEvolucao(Optional Finalidade As String) As String
+
+    Dim strFiltro As String, strFiltroCCaixa As String, strFiltroCBanco As String, strFiltroCResultado As String, strOrcamento  As String
+    Dim sqlCAIXAS As String, sqlBANCOS As String, SQLContasPagar As String, SQLContasReceber As String, sqlBancosPendentes As String
+    Dim UNION As String
+    Dim Periodos As Long, PeriodoAnual As Boolean
+
+    Periodos = DateDiff("m", txtPDataInicial, txtPDataFinal) + 1
+
+    If Periodos >= 24 Then
+        Periodos = DateDiff("yyyy", txtPDataInicial, txtPDataFinal) + 1
+        PeriodoAnual = True
+    End If
+
+    strFiltroCResultado = " AND ContasContabeis.ContaResultado IN (" & MontaFiltroContasResultados & ")"
+
+    'CONTA MESES PARA MÉDIA
+    iMes = DateDiff("m", txtPDataInicial, txtPDataFinal) + 1
+
+    strOrcamento = "SELECT (SUM((QtdMesesSemOrcamento*MediaValorOrcamentosAnuais)+(ValorOrcamentosMensais))/" & iMes & ") Orcamento " & vbNewLine
+    strOrcamento = strOrcamento & "FROM(/*Referências MENSAIS no período especificado*/ " & vbNewLine
+    strOrcamento = strOrcamento & " SELECT " & vbNewLine
+    strOrcamento = strOrcamento & "     " & iMes & "-(COUNT(*))QtdMesesSemOrcamento, " & vbNewLine
+    strOrcamento = strOrcamento & "     (CASE WHEN(SUM(Valor))IS NULL THEN 0 ELSE (SUM(Valor))END) ValorOrcamentosMensais, " & vbNewLine
+    strOrcamento = strOrcamento & "     (/*Referências ANUAIS no período especificado*/ " & vbNewLine
+    strOrcamento = strOrcamento & "         SELECT (CASE WHEN(AVG(Valor))IS NULL THEN 0 ELSE (AVG(Valor))END) " & vbNewLine
+    strOrcamento = strOrcamento & "         FROM ContasContabeisOrcamentos ContasContabeisOrcamentosAnuais " & vbNewLine
+    strOrcamento = strOrcamento & "         WHERE (LEFT(ContasContabeisOrcamentosAnuais.Referencia,2) = 00) /*<- Ao buscar referências ANUAIS, só considera referências com o mês igual a 00*/ " & vbNewLine
+    strOrcamento = strOrcamento & "         AND (CAST('31/12/' + RIGHT(ContasContabeisOrcamentosAnuais.Referencia,4) AS DATETIME) >= CAST('" & txtPDataInicial & "' AS DATETIME)) " & vbNewLine
+    strOrcamento = strOrcamento & "         AND (CAST('01/01/' + RIGHT(ContasContabeisOrcamentosAnuais.Referencia,4) AS DATETIME) <= CAST('" & txtPDataFinal & "' AS DATETIME)) " & vbNewLine
+    strOrcamento = strOrcamento & "         AND (ContasContabeisOrcamentosAnuais.CodigoContaContabil = ContasContabeis.Codigo) " & vbNewLine
+    strOrcamento = strOrcamento & "     ) MediaValorOrcamentosAnuais " & vbNewLine
+    strOrcamento = strOrcamento & " FROM ContasContabeisOrcamentos ContasContabeisOrcamentosMensais " & vbNewLine
+    strOrcamento = strOrcamento & " WHERE (LEFT(ContasContabeisOrcamentosMensais.Referencia,2) > 00) /*<- Ao buscar referências MENSAIS, só considera referências com o mês maior que 00*/ " & vbNewLine
+    strOrcamento = strOrcamento & " AND (CAST('01/' + RIGHT(ContasContabeisOrcamentosMensais.Referencia,7) AS DATETIME) >= CAST('" & txtPDataInicial & "' AS DATETIME)) " & vbNewLine
+    strOrcamento = strOrcamento & " AND (CAST('01/' + RIGHT(ContasContabeisOrcamentosMensais.Referencia,7) AS DATETIME) <= CAST('" & txtPDataFinal & "' AS DATETIME)) " & vbNewLine
+    strOrcamento = strOrcamento & " AND (ContasContabeisOrcamentosMensais.CodigoContaContabil = ContasContabeis.Codigo) " & vbNewLine
+    strOrcamento = strOrcamento & ")AS SubOrc " & vbNewLine
+
+    'PREPARA FILTRO
+    strFiltro = ""
+    strFiltroCCaixa = ""
+    strFiltroCBanco = ""
+    'Conta Caixa\Banco
+    If Trim(cmbContas.Text) <> "" Then
+        If IsNumeric(cmbContas.BoundText) = True Then
+            If optConta(0).Value = True Then 'Conta Caixa
+                strFiltroCCaixa = " AND ContasCaixasMovimentos.CodigoContaCaixa = " & cmbContas.BoundText & " AND (" & SAGEDLL.SQL_PONTO("ContasCaixasMovimentos") & ") " & vbNewLine
+                strFiltroCBanco = " AND ContasBancosMovimentos.CodigoContaBanco = " & 99999998 & " AND (" & SAGEDLL.SQL_PONTO("ContasBancosMovimentos") & ") " & vbNewLine
+            Else 'Conta Banco
+                strFiltroCBanco = " AND ContasBancosMovimentos.CodigoContaBanco = " & cmbContas.BoundText & " AND (" & SAGEDLL.SQL_PONTO("ContasBancosMovimentos") & ") " & vbNewLine
+                strFiltroCCaixa = " AND ContasCaixasMovimentos.CodigoContaCaixa = " & 99999998 & " AND (" & SAGEDLL.SQL_PONTO("ContasCaixasMovimentos") & ") " & vbNewLine
+            End If
+        End If
+    End If
+    'Centro de Cústo
+    If txtCodigoCentroCusto.Text <> "" Then
+        strFiltro = strFiltro & " AND CodigoCentroCusto = " & txtCodigoCentroCusto & " " & vbNewLine
+    End If
+    'Conta Contábil
+    If txtCodigoContaContabil.Text <> "" Then
+        strFiltro = strFiltro & " AND (CodigoContaContabil = " & txtCodigoContaContabil & " OR ContasContabeis.Identificador LIKE (Select Identificador From ContasContabeis Where ContasContabeis.Codigo = " & txtCodigoContaContabil.Text & ") +'.%')" & vbNewLine
+    End If
+
+    'MONTA
+    'FATURAMENTO
+    Dim rsFaturamento As New Recordset
+    If rsFaturamento.State = 1 Then rsFaturamento.Close
+    rsFaturamento.Open "SELECT SUM(TotaisTotal) As TotalTotal " & _
+    "FROM Saidas " & _
+    "WHERE (Saidas.Data BETWEEN " & SAGEDLL.SQL_CV("DATAHORA", txtPDataInicial) & " AND " & SAGEDLL.SQL_CV("DATAHORA", txtPDataFinal) & ") AND Cancelado = 'NÃO' AND (Saidas.Tipo = 'VENDA' OR Saidas.Tipo = 'ORDEM DE SERVIÇO' OR Saidas.Tipo = 'TROCA') AND " & SAGEDLL.SQL_PONTO("Saidas"), SAGEDLL.CNBDADOS, adOpenForwardOnly, adLockReadOnly
+    If IsNull(rsFaturamento("TotalTotal")) = False And rsFaturamento("TotalTotal") <> 0 Then
+        strFATURAMENTO = "/" & SAGEDLL.SQL_CV("VALOR", CStr(rsFaturamento("TotalTotal")))
+        TotalFaturamento = MSTIFUN.FORMATAValor(rsFaturamento("TotalTotal"))
+    Else
+        strFATURAMENTO = "*0"
+        TotalFaturamento = MSTIFUN.FORMATAValor("0")
+    End If
+
+    RecordsetFinaliza rsFaturamento
+    
+    'CONTAS CAIXAS
+    sqlCAIXAS = "SELECT CodigoContaContabil, 'CX' AS MOV, IDENTIFICADOR, (ContasContabeis.Nome +' {'+ LTRIM(STR(ContasContabeis.Codigo)) +'}') AS CONTACONTABIL, " & vbNewLine
+    sqlCAIXAS = sqlCAIXAS & "Sum(CASE WHEN Operacao='CRÉDITO' THEN 1 ELSE 0 END * Valor) AS totalCREDITO, " & vbNewLine
+    sqlCAIXAS = sqlCAIXAS & "Sum(CASE WHEN Operacao='DÉBITO' THEN 1 ELSE 0 END * Valor) AS totalDEBITO, " & vbNewLine
+    sqlCAIXAS = sqlCAIXAS & "Sum((CASE WHEN Operacao='CRÉDITO' THEN 1 ELSE 0 END * Valor)-(CASE WHEN Operacao='DÉBITO' THEN 1 ELSE 0 END * Valor)) AS totalSALDO, " & vbNewLine
+    sqlCAIXAS = sqlCAIXAS & "(ABS(Sum((CASE WHEN Operacao='CRÉDITO' THEN 1 ELSE 0 END * Valor)-(CASE WHEN Operacao='DÉBITO' THEN 1 ELSE 0 END * Valor))*100))" & strFATURAMENTO & " AS FAT  " & vbNewLine
+    sqlCAIXAS = sqlCAIXAS & ", 0 Pendente, (" & strOrcamento & ") Orcado " & vbNewLine
+    sqlCAIXAS = sqlCAIXAS & "FROM ContasCaixasMovimentos INNER JOIN ContasContabeis ON ContasCaixasMovimentos.CodigoContaContabil = ContasContabeis.Codigo " & vbNewLine
+    sqlCAIXAS = sqlCAIXAS & "WHERE " & vbNewLine
+    If Finalidade = "CALCULARTOTAIS" Then
+        If PeriodoAnual Then
+            sqlCAIXAS = sqlCAIXAS & "Year(Data) = DatePart(yy, Date) AND" & vbNewLine
+        Else
+            sqlCAIXAS = sqlCAIXAS & "Month(Data) = DATEPART(mm, date) AND Year(Data) = DATEPART(yy, date) AND" & vbNewLine
+        End If
+    End If
+    sqlCAIXAS = sqlCAIXAS & "(Data BETWEEN " & SAGEDLL.SQL_CV("DATAHORA", txtPDataInicial.Text) & " AND " & SAGEDLL.SQL_CV("DATAHORA", txtPDataFinal.Text) & " AND ContasCaixasMovimentos.Situacao = 'QUITADO' AND ContasContabeis.Situacao = 'ATIVO' " & strFiltroCResultado & " " & strFiltro & strFILTROCX & strFiltroCCaixa & vbNewLine
+    sqlCAIXAS = sqlCAIXAS & ")GROUP BY ContasContabeis.ContaResultado, ContasContabeis.Codigo, CodigoContaContabil, IDENTIFICADOR, (ContasContabeis.Nome +' {'+ LTRIM(STR(ContasContabeis.Codigo)) +'}')" & vbNewLine
+
+    'CONTAS BANCOS
+    sqlBANCOS = "SELECT CodigoContaContabil,'BC' AS MOV, IDENTIFICADOR, (ContasContabeis.Nome +' {'+ LTRIM(STR(ContasContabeis.Codigo)) +'}') AS CONTACONTABIL, " & vbNewLine
+    sqlBANCOS = sqlBANCOS & "Sum(CASE WHEN Operacao='CRÉDITO' THEN 1 ELSE 0 END * Valor) AS totalCREDITO, " & vbNewLine
+    sqlBANCOS = sqlBANCOS & "Sum(CASE WHEN Operacao='DÉBITO' THEN 1 ELSE 0 END * Valor) AS totalDEBITO, " & vbNewLine
+    sqlBANCOS = sqlBANCOS & "Sum((CASE WHEN Operacao='CRÉDITO' THEN 1 ELSE 0 END * Valor)-(CASE WHEN Operacao='DÉBITO' THEN 1 ELSE 0 END * Valor)) AS totalSALDO, " & vbNewLine
+    sqlBANCOS = sqlBANCOS & "(ABS(Sum((CASE WHEN Operacao='CRÉDITO' THEN 1 ELSE 0 END * Valor)-(CASE WHEN Operacao='DÉBITO' THEN 1 ELSE 0 END * Valor))*100))" & strFATURAMENTO & " AS FAT " & vbNewLine
+    sqlBANCOS = sqlBANCOS & ", 0 Pendente, (" & strOrcamento & ") Orcado " & vbNewLine
+    sqlBANCOS = sqlBANCOS & "FROM ContasBancosMovimentos INNER JOIN ContasContabeis ON ContasBancosMovimentos.CodigoContaContabil = ContasContabeis.Codigo " & vbNewLine
+    sqlBANCOS = sqlBANCOS & "WHERE " & vbNewLine
+    If Finalidade = "CALCULARTOTAIS" Then
+        If PeriodoAnual Then
+            sqlBANCOS = sqlBANCOS & "Year(Quitacao) = DatePart(yy, Date) AND" & vbNewLine
+        Else
+            sqlBANCOS = sqlBANCOS & "Month(Quitacao) = DATEPART(mm, date) AND Year(Quitacao) = DATEPART(yy, date) AND" & vbNewLine
+        End If
+    End If
+    sqlBANCOS = sqlBANCOS & "(Quitacao BETWEEN " & SAGEDLL.SQL_CV("DATAHORA", txtPDataInicial.Text) & " AND " & SAGEDLL.SQL_CV("DATAHORA", txtPDataFinal.Text) & " AND ContasBancosMovimentos.Situacao = 'QUITADO' AND ContasContabeis.Situacao = 'ATIVO' " & strFiltroCResultado & " " & strFiltro & strFILTROCB & strFiltroCBanco & vbNewLine
+    sqlBANCOS = sqlBANCOS & ")GROUP BY ContasContabeis.ContaResultado, ContasContabeis.Codigo, CodigoContaContabil, IDENTIFICADOR, (ContasContabeis.Nome +' {'+ LTRIM(STR(ContasContabeis.Codigo)) +'}')" & vbNewLine
+
+    'BANCOS PENDENTES
+    sqlBancosPendentes = "SELECT CodigoContaContabil,'BP' AS MOV, IDENTIFICADOR, (ContasContabeis.Nome +' {'+ LTRIM(STR(ContasContabeis.Codigo)) +'}') AS CONTACONTABIL, " & vbNewLine
+    sqlBancosPendentes = sqlBancosPendentes & "0 AS totalCREDITO, " & vbNewLine
+    sqlBancosPendentes = sqlBancosPendentes & "0 AS totalDEBITO, " & vbNewLine
+    sqlBancosPendentes = sqlBancosPendentes & "0 AS totalSALDO, " & vbNewLine
+    sqlBancosPendentes = sqlBancosPendentes & "(ABS(Sum((CASE WHEN Operacao='CRÉDITO' THEN 1 ELSE 0 END * Valor)-(CASE WHEN Operacao='DÉBITO' THEN 1 ELSE 0 END * Valor))*100))" & strFATURAMENTO & " AS FAT " & vbNewLine
+    sqlBancosPendentes = sqlBancosPendentes & ", SUM(CASE WHEN Operacao='CRÉDITO' THEN (Valor) ELSE (Valor) * -1 END) AS Pendente, (" & strOrcamento & ") Orcado " & vbNewLine
+    sqlBancosPendentes = sqlBancosPendentes & "FROM ContasBancosMovimentos INNER JOIN ContasContabeis ON ContasBancosMovimentos.CodigoContaContabil = ContasContabeis.Codigo " & vbNewLine
+    sqlBancosPendentes = sqlBancosPendentes & "WHERE " & vbNewLine
+    If Finalidade = "CALCULARTOTAIS" Then
+        If PeriodoAnual Then
+            sqlBancosPendentes = sqlBancosPendentes & "Year(Vencimento) = DatePart(yy, Date) AND" & vbNewLine
+        Else
+            sqlBancosPendentes = sqlBancosPendentes & "Month(Vencimento) = DATEPART(mm, date) AND Year(Vencimento) = DATEPART(yy, date) AND" & vbNewLine
+        End If
+    End If
+    sqlBancosPendentes = sqlBancosPendentes & "(Vencimento BETWEEN " & SAGEDLL.SQL_CV("DATAHORA", txtPDataInicial.Text) & " AND " & SAGEDLL.SQL_CV("DATAHORA", txtPDataFinal.Text) & " AND ContasBancosMovimentos.Situacao = 'PENDENTE' AND ContasContabeis.Situacao = 'ATIVO' " & strFiltroCResultado & " " & strFiltro & strFILTROCB & strFiltroCBanco & vbNewLine
+    sqlBancosPendentes = sqlBancosPendentes & ")GROUP BY ContasContabeis.ContaResultado,  ContasContabeis.Codigo, CodigoContaContabil, IDENTIFICADOR, (ContasContabeis.Nome +' {'+ LTRIM(STR(ContasContabeis.Codigo)) +'}')" & vbNewLine
+
+    'CONTAS A PAGAR
+    SQLContasPagar = "SELECT CodigoContaContabil,'CP' AS MOV, IDENTIFICADOR, (ContasContabeis.Nome +' {'+ LTRIM(STR(ContasContabeis.Codigo)) +'}') AS CONTACONTABIL, " & vbNewLine
+    SQLContasPagar = SQLContasPagar & "0 AS totalCREDITO, " & vbNewLine
+    SQLContasPagar = SQLContasPagar & "0 AS totalDEBITO, " & vbNewLine
+    SQLContasPagar = SQLContasPagar & "0 AS totalSALDO, " & vbNewLine
+    SQLContasPagar = SQLContasPagar & "(ABS(Sum(ContasPagarParcelas.Valor)*100))" & strFATURAMENTO & " AS FAT " & vbNewLine
+    SQLContasPagar = SQLContasPagar & ", (SUM(ContasPagarParcelas.Valor)) * -1 AS Pendente, (" & strOrcamento & ") Orcado " & vbNewLine
+    SQLContasPagar = SQLContasPagar & "FROM ContasPagar INNER JOIN ContasContabeis ON ContasPagar.CodigoContaContabil = ContasContabeis.Codigo " & vbNewLine
+    SQLContasPagar = SQLContasPagar & "INNER JOIN ContasPagarParcelas ON ContasPagar.Codigo = ContasPagarParcelas.CodigoContaPagar " & vbNewLine
+    SQLContasPagar = SQLContasPagar & "WHERE " & vbNewLine
+    If Finalidade = "CALCULARTOTAIS" Then
+        If PeriodoAnual Then
+            SQLContasPagar = SQLContasPagar & "Year(ContasPagarParcelas.Vencimento) = DatePart(yy, Date) AND" & vbNewLine
+        Else
+            SQLContasPagar = SQLContasPagar & "Month(ContasPagarParcelas.Vencimento) = DATEPART(mm, date) AND Year(ContasPagarParcelas.Vencimento) = DATEPART(yy, date) AND" & vbNewLine
+        End If
+    End If
+    SQLContasPagar = SQLContasPagar & "(ContasPagarParcelas.Vencimento BETWEEN " & SAGEDLL.SQL_CV("DATAHORA", txtPDataInicial.Text) & " AND " & SAGEDLL.SQL_CV("DATAHORA", txtPDataFinal.Text) & " AND ContasPagarParcelas.Situacao = 'PENDENTE' AND ContasContabeis.Situacao = 'ATIVO' " & strFiltroCResultado & " " & strFiltro & vbNewLine
+    SQLContasPagar = SQLContasPagar & "AND (" & SAGEDLL.SQL_PONTO("ContasPagar") & ")) GROUP BY ContasContabeis.ContaResultado,  ContasContabeis.Codigo, CodigoContaContabil, IDENTIFICADOR, (ContasContabeis.Nome +' {'+ LTRIM(STR(ContasContabeis.Codigo)) +'}')" & vbNewLine
+
+    'CONTAS A RECEBER
+    SQLContasReceber = "SELECT CodigoContaContabil,'CR' AS MOV, IDENTIFICADOR, (ContasContabeis.Nome +' {'+ LTRIM(STR(ContasContabeis.Codigo)) +'}') AS CONTACONTABIL, " & vbNewLine
+    SQLContasReceber = SQLContasReceber & "0 AS totalCREDITO, " & vbNewLine
+    SQLContasReceber = SQLContasReceber & "0 AS totalDEBITO, " & vbNewLine
+    SQLContasReceber = SQLContasReceber & "0 AS totalSALDO, " & vbNewLine
+    SQLContasReceber = SQLContasReceber & "(ABS(Sum(ContasReceberParcelas.Valor)*100))" & strFATURAMENTO & " AS FAT " & vbNewLine
+    SQLContasReceber = SQLContasReceber & ", SUM(ContasReceberParcelas.Valor) AS Pendente, (" & strOrcamento & ") Orcado " & vbNewLine
+    SQLContasReceber = SQLContasReceber & "FROM ContasReceber INNER JOIN ContasContabeis ON ContasReceber.CodigoContaContabil = ContasContabeis.Codigo " & vbNewLine
+    SQLContasReceber = SQLContasReceber & "INNER JOIN ContasReceberParcelas ON ContasReceber.Codigo = ContasReceberParcelas.CodigoContaReceber " & vbNewLine
+    SQLContasReceber = SQLContasReceber & "WHERE " & vbNewLine
+    If Finalidade = "CALCULARTOTAIS" Then
+        If PeriodoAnual Then
+            SQLContasReceber = SQLContasReceber & "Year(ContasReceberParcelas.Vencimento) = DatePart(yy, Date) AND" & vbNewLine
+        Else
+            SQLContasReceber = SQLContasReceber & "Month(ContasReceberParcelas.Vencimento) = DATEPART(mm, date) AND Year(ContasReceberParcelas.Vencimento) = DATEPART(yy, date) AND" & vbNewLine
+        End If
+    End If
+    SQLContasReceber = SQLContasReceber & "(ContasReceberParcelas.Vencimento BETWEEN " & SAGEDLL.SQL_CV("DATAHORA", txtPDataInicial.Text) & " AND " & SAGEDLL.SQL_CV("DATAHORA", txtPDataFinal.Text) & " AND ContasReceberParcelas.Situacao = 'PENDENTE' AND ContasContabeis.Situacao = 'ATIVO' " & strFiltroCResultado & " " & strFiltro & vbNewLine
+    SQLContasReceber = SQLContasReceber & "AND (" & SAGEDLL.SQL_PONTO("ContasReceber") & ")) GROUP BY ContasContabeis.ContaResultado,  ContasContabeis.Codigo, CodigoContaContabil, IDENTIFICADOR, (ContasContabeis.Nome +' {'+ LTRIM(STR(ContasContabeis.Codigo)) +'}')" & vbNewLine
+
+    'Gera o UNION de Contas Caixas e Bancos de acordo com o Option Box de Contas
+    If optConta(0).Value = True Then 'Contas Caixa Apenas
+        UNION = sqlCAIXAS
+    ElseIf optConta(1).Value = True Then 'Contas Banco Apenas
+        If chkQuitado.Value = 1 Then
+            UNION = sqlBANCOS & IIf(chkPendente.Value = 1, " UNION " & sqlBancosPendentes, "")
+        Else
+            UNION = sqlBancosPendentes
+        End If
+    Else 'optConta(2).Value = True (TODAS [Contas Caixas e Bancos])
+        If chkQuitado.Value = 1 Then
+            UNION = sqlCAIXAS & " UNION " & sqlBANCOS & IIf(chkPendente.Value = 1, " UNION " & sqlBancosPendentes & " UNION " & SQLContasReceber & " UNION " & SQLContasPagar, "")
+        Else
+            UNION = IIf(chkPendente.Value = 1, sqlBancosPendentes & " UNION " & SQLContasReceber & " UNION " & SQLContasPagar, "")
+        End If
+    End If
+    
+    GeraConsultaEvolucao = UNION
+
+End Function
+
+
+'TAR:9332
+Private Sub ImprimirEvolucao()
+On Error GoTo TrataErro
+TentaNovamente:
+    chrGrafico.EditCopy
+    imgGrafico.Picture = Clipboard.GetData
+    
+    Dim Linha As String
+    Dim i As Integer, Temp() As String, Y As Integer, TamanhoGrade As Integer, ColunasGrade As Integer
+    Const Identacao As Integer = 10
+    
+    MSTIIMP.CONFIGURA 0, 0, 1, 1, IMPNEGRITO, , , IMPCABECALHO
+    
+    'Cabeçalho
+    MSTIIMP.CABECALHOPAGINATITULO = "BI - BALANCETE - EVOLUÇÃO"
+    MSTIIMP.CABECALHOPAGINASUBTITULO = MSTIFUN.FORMATAData(txtPDataInicial) & " ATÉ " & MSTIFUN.FORMATAData(txtPDataFinal)
+    MSTIIMP.CABECALHOpagina
+    MSTIIMP.CabecalhoItemTitulo = ""
+    MSTIIMP.CABECALHOitem
+    
+    'Imprime a imagem
+    '             CONFIGURACAO:  IMPRIMIR, TAMANHO,  POSx,     POSy
+    MSTIIMP.Posicao imgGrafico, "TRUE      0         0         15", 0, 15, 1, , , , , 265, 80
+    
+    For i = 1 To 40
+        MSTIIMP.TABULACAO " ", 0, 1
+    Next
+
+    MSTIIMP.TABULACAO "==========================================================================================================================================================================================================", 1, 0
+        
+    With grdEvolucao
+        TamanhoGrade = .rows
+        For i = 0 To .rows - 1
+            Linha = ""
+            ColunasGrade = .Cols - 1
+            'GRADE COM MAIS DE 12 PERÍODOS IMPRIME APENAS OS 12 ÚLTIMOS
+            If ColunasGrade > 12 Then
+                For Y = 0 To ColunasGrade - 1
+                    If Not (i > 0 And i Mod 2 = 0 And Y = 0) Then
+                        If i = 0 And Y = 0 Then
+                            Linha = Linha & .TextMatrix(i, Y) & TRATACampo(" ", 17)
+                        ElseIf i = 0 And Y > 0 Then
+                            Linha = Linha & .TextMatrix(i, Y + ColunasGrade - 12) & TRATACampo(" ", 16 - Len(.TextMatrix(i, Y + ColunasGrade - 12)))
+                        ElseIf i > 0 And Y = 0 Then
+                            Linha = Linha & Left(.TextMatrix(i, Y), 10) & TRATACampo(" ", 10 - Len(Left(.TextMatrix(i, Y), 10)))
+                        Else
+                            Linha = Linha & TRATACampo(" ", 16 - Len(Left(.TextMatrix(i, Y + ColunasGrade - 12), 16))) & Left(.TextMatrix(i, Y + ColunasGrade - 12), 16)
+                        End If
+                    Else
+                        Linha = Linha & TRATACampo(" ", 10)
+                    End If
+                Next
+            
+                MSTIIMP.TABULACAO Linha, 1, 0
+                If i = 0 Then MSTIIMP.TABULACAO "==========================================================================================================================================================================================================", 1, 0
+                If i > 0 And i Mod 2 = 0 Then MSTIIMP.TABULACAO "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------", 1, 0
+            'GRADE COM MENOS DE 12 PERÍODOS
+            Else
+                For Y = 0 To ColunasGrade
+                    If Not (i > 0 And i Mod 2 = 0 And Y = 0) Then
+                        If i = 0 And Y = 0 Then
+                            Linha = Linha & .TextMatrix(i, Y) & TRATACampo(" ", 17)
+                        ElseIf i = 0 And Y > 0 Then
+                            Linha = Linha & .TextMatrix(i, Y) & TRATACampo(" ", 16 - Len(.TextMatrix(i, Y)))
+                        ElseIf i > 0 And Y = 0 Then
+                            Linha = Linha & Left(.TextMatrix(i, Y), 10) & TRATACampo(" ", 10 - Len(Left(.TextMatrix(i, Y), 10)))
+                        Else
+                            Linha = Linha & TRATACampo(" ", 16 - Len(Left(.TextMatrix(i, Y), 16))) & Left(.TextMatrix(i, Y), 16)
+                        End If
+                    Else
+                        Linha = Linha & TRATACampo(" ", 10)
+                    End If
+                Next
+                MSTIIMP.TABULACAO Linha, 1, 0
+                If i = 0 Then MSTIIMP.TABULACAO "==========================================================================================================================================================================================================", 1, 0
+                If i > 0 And i Mod 2 = 0 Then MSTIIMP.TABULACAO "----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------", 1, 0
+            End If
+        Next
+    End With
+        
+    Exit Sub
+TrataErro:
+    If Err.Number = 521 Then
+        If MsgBox("Falha ao imprimir gráfico." & vbCrLf & "Erro ao tentar acessar a área de transferência do Windows." & vbCrLf & "Clique em Repetir para tentar novamente.", vbCritical + vbRetryCancel + vbDefaultButton1, "ERRO nas informações") = vbRetry Then
+            GoTo TentaNovamente
+        End If
+    Else
+        MsgBox "Falha ao imprimir gráfico." & vbCrLf & Err.Description, vbCritical, "ERRO nas informações"
+    End If
+End Sub
+

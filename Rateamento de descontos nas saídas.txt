@@ -1,0 +1,3 @@
+Rateamento de descontos nas saídas
+
+(SaidasProdutos.ValorTotal * (Saidas.ProdutoDesconto * 100 / Saidas.ProdutoSubTotal) / 100)

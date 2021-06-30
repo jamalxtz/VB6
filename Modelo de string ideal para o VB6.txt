@@ -1,0 +1,13 @@
+DIM SQL AS STRING
+
+SQL = "If Exists (Select * from Marcas where Codigo = 0 ) "
+SQL = SQL & "begin " & VBNEWLINE
+SQL = SQL & "     --Se a marca existir, exibe mensagem" & VBNEWLINE
+SQL = SQL & "     print ('Marca padrão já está cadastrada') " & VBNEWLINE
+SQL = SQL & " end " & VBNEWLINE
+SQL = SQL & "else " & VBNEWLINE
+SQL = SQL & " begin " & VBNEWLINE
+SQL = SQL & "   --Se o valor não existir, realiza o insert " & VBNEWLINE
+SQL = SQL & "   Insert into Marcas (codigo,nome, ATZDH, ATZPT) values (0,' ', GETDATE(), '|00|') " & VBNEWLINE
+SQL = SQL & "select * from Marcas order by Codigo " & VBNEWLINE
+SQL = SQL & "end"

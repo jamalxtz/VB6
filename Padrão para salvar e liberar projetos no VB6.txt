@@ -1,0 +1,4 @@
+Padrão para salvar e liberar projetos no VB6
+
+CheckOut = Traz a Ultima versão do Form para que possa ser editada
+CheckIn  = Envia para o servidor as alterações feitas no Form

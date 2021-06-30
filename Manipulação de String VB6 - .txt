@@ -1,0 +1,27 @@
+UF - 52               
+ANO E MES - 1901
+CNPJ - 05462662000105
+MODELO - 55
+SÉRIE - 000
+NÚMERO - 000174117
+FORMA - 1
+CÓDIGO - 03997004
+DV - 0
+
+'Declara as variáveis
+Dim UFChave As String, DataEmissaoChave As String, CNPJEmitenteChave As String
+Dim ModeloChave As String, SerieChave As String, NumeroChave As String
+Dim DataEmissaoChaveFormatada As String
+
+'Atribui valor com base na chave de acesso
+UFChave = Left(Chave, 2)
+DataEmissaoChave = Right(Left(Chave, 6), 4)
+CNPJEmitenteChave = Right(Left(Chave, 20), 14)
+ModeloChave = Right(Left(Chave, 22), 2)
+SerieChave = Right(Left(Chave, 25), 3)
+NumeroChave = Right(Left(Chave, 34), 9)
+DataEmissaoChaveFormatada = Right(Left(DataEmissaoChave, 4), 2) & "/" & Left(DataEmissaoChave, 2)
+
+
+'Remove o último caractere
+SQL = Left(SQL, Len(SQL) - 2) & vbNewLine

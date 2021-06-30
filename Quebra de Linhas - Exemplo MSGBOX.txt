@@ -1,0 +1,1 @@
+MsgBox "Não foi possível utilizar o Envio Futuro." & vbCrLf & "Provavelmente essa venda teve a NFC-e registrada na sefaz, " & vbCrLf & "acesse o menu Comercial > Saídas e tente fazer a reimpressão da Saída: " & CODIGO & ".", vbCritical, "Erro"

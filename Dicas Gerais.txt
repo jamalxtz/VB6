@@ -1,0 +1,26 @@
+Posso te dar algumas dicas:
+
+Não use On Error Resume Next
+Não use Variant;
+Não use variáveis ou funções globais. Cuidado, no VB é fácil declara-las.
+Use Option Explicit em tudo;
+Lembre-se que os tipos do VB6 são pequenos, da época em que os computadores tinham só 16 bits;
+Não use On Error Resume Next, Variant e coisas globais (sim, vale a pena repetir isso);
+Se sua sub tiver que ser privada, lembre-se de declara-la como tal (por default é public - argh);
+Para BD use o ADO ao invés do DAO.
+Jamais, nunca, never inicie um novo desenvolvimento em VB6. Use C#, VB.Net 7. Mas não VB6.
+Cuidado com a armadilha sintática:
+a é Variant
+b é Integer
+
+Cuidado ao mapear funções do Windows que retornam unsigned. Muita gente mapeia DWORD para unsigned long, e acaba com um Overflow. Eu mesmo esqueci disso e tive esse problema, recentemente.
+
+Seja cuidadoso nos logs. Procure gerar logs, já que o VB6 não tem stack trace. Uma ótima idéia é mapear a função:
+
+Do windows e usa-la. Toda string que vc passa para ela é enviada para o Windows para uma aplicação externa de log. Uma dessas aplicações, que pode ser baixada de graça no site da MS é o DebugView. Ele faz parte dos “Windows Sysinternals” (procure por isso no google).
+
+Peça para o compilador gerar o “simbolic debug info”. Isso permite que seu usuário crie o famoso “Crash Dump”. Anexe o arquivo .pdb juntamente ao instalador do seu executavel. Abrindo esse crash dump no Visual C++ Express, ou no “Debbuging tools for windows” (que é usado para gerar o dump) você pode obter, em boa parte das vezes, a stack trace de onde o erro ocorreu. Ambos os aplicativos podem ser baixados gratuitamente no site da MS.
+
+Trate o melhor que vc puder os erros usando on error goto e on error goto 0.
+
+E mais importante, se possível, convença seu chefe a migrar para uma plataforma melhor.

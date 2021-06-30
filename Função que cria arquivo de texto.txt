@@ -1,0 +1,144 @@
+Public Function DFe_LOG_ChaveDeAcesso(OrigemTipo As enumEstruturaAliquotasSentido, ByRef ORIGEMcodigo, NFNUMERO As String, NFLOTE As String, CHAVEAcesso As String)
+
+    Dim INDICE As Integer
+    Dim ARQCONTEUDO() As String
+    Dim ARQNome As String, ARQPasta As String
+    Dim ORIGEM As String
+    
+    If OrigemTipo = 1 Then
+        ORIGEM = "Entrada"
+    ElseIf OrigemTipo = 2 Then
+        ORIGEM = "Saida"
+    End If
+    
+    'NOME LOG + ENTRADA OU SAIDA + CÓDIGO + .log
+    ARQNome = "LOG" & ORIGEM & ORIGEMcodigo & ".TXT"
+    
+    'ARQPasta = App.Path & "\LOG"
+    ARQPasta = "C:\Users\brunomss\Desktop" & "\LOG"
+    
+    'Cria pasta se não existir
+    If FSO.FolderExists(ARQPasta) = False Then FSO.CreateFolder (ARQPasta)
+    
+    Close #99
+    
+    'Altera o arquivo caso ele exista
+    If FSO.FileExists(ARQPasta & ARQNome) = True Then
+        Open (ARQPasta & ARQNome) For Append As #99
+    Else
+        'Cria o arquivo
+        Open (ARQPasta & ARQNome) For Output As #99
+    End If
+        
+    
+    '***********************************************************
+    '****************IMPRIME O ARQUIVO DE LOG*******************
+    '***********************************************************
+    
+    'Redeclara a Variavel e Limpa o Conteudo
+    INDICE = 0
+    ReDim Preserve ARQCONTEUDO(INDICE)
+    
+    'DATA DO EVENTO
+    ARQCONTEUDO(INDICE) = " Data..: " & MSTIFUN.FORMATAData(CDate(Date)) & " - " & MSTIFUN.FORMATAHora(CDate(Time))
+    Print #99, ARQCONTEUDO(INDICE)
+    'ORIGEM
+    ARQCONTEUDO(INDICE) = " Origem: " & ORIGEM
+    Print #99, ARQCONTEUDO(INDICE)
+    'ORIGEM CODIGO
+    ARQCONTEUDO(INDICE) = " Código: " & ORIGEMcodigo
+    Print #99, ARQCONTEUDO(INDICE)
+    'NUMERO
+    ARQCONTEUDO(INDICE) = " Número: " & NFNUMERO
+    Print #99, ARQCONTEUDO(INDICE)
+    'LOTE
+    ARQCONTEUDO(INDICE) = " Lote..: " & NFLOTE
+    Print #99, ARQCONTEUDO(INDICE)
+    'CHAVE DE ACESSO
+    ARQCONTEUDO(INDICE) = " Chave.: " & CHAVEAcesso
+    Print #99, ARQCONTEUDO(INDICE)
+    'SEPARADOR
+    ARQCONTEUDO(INDICE) = "---------------------------------------"
+    Print #99, ARQCONTEUDO(INDICE)
+    
+    Close #99
+
+End Function
+
+
+
+
+
+
+
+VERSÃO RESUMIDA
+-----------------------------------------------------------------------------------------------------
+
+
+
+    Dim INDICE As Integer
+    Dim ARQCONTEUDO() As String
+    Dim ARQNome As String, ARQPasta As String
+    Dim ORIGEM As String
+
+    'NOME DO ARQUIVO
+    ARQNome = "\LOG.TXT"
+    
+    'ARQPasta = App.Path & "\LOG"
+    ARQPasta = "C:\Users\brunomss\Desktop" & "\LOG"
+    
+    'Cria pasta se não existir
+    If FSO.FolderExists(ARQPasta) = False Then FSO.CreateFolder (ARQPasta)
+    
+    Close #99
+    
+    'Altera o arquivo caso ele exista
+    If FSO.FileExists(ARQPasta & ARQNome) = True Then
+        Open (ARQPasta & ARQNome) For Append As #99
+    Else
+        'Cria o arquivo
+        Open (ARQPasta & ARQNome) For Output As #99
+    End If
+        
+    'Redeclara a Variavel e Limpa o Conteudo
+    INDICE = 0
+    ReDim Preserve ARQCONTEUDO(INDICE)
+    
+    'DATA DO EVENTO
+    ARQCONTEUDO(INDICE) = " DAata..: " & MSTIFUN.FORMATAData(CDate(Date)) & " - " & MSTIFUN.FORMATAHora(CDate(Time))
+    Print #99, ARQCONTEUDO(INDICE)
+	'SEPARADOR
+    ARQCONTEUDO(INDICE) = "---------------------------------------"
+    Print #99, ARQCONTEUDO(INDICE)
+    'ORIGEM
+    ARQCONTEUDO(INDICE) = ORIGEM
+    Print #99, ARQCONTEUDO(INDICE)
+    'SEPARADOR
+    ARQCONTEUDO(INDICE) = "---------------------------------------"
+    Print #99, ARQCONTEUDO(INDICE)
+    
+    Close #99
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

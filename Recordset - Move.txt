@@ -1,0 +1,19 @@
+Os cinco métodos mais comuns do Recordset que permitem posicionar programaticamente o ponteiro do registro são os seguintes:
+
+Move - este método usa um valor Longo positivo ou negativo como um parâmetro obrigatório. O parâmetro especifica o número de registros a serem movidos da posição atual do ponteiro do registro. Valores positivos indicam movimento para frente, enquanto valores negativos indicam movimento para trás. Um segundo parâmetro opcional permite que você especifique o marcador de um registro diferente. Especificar este segundo parâmetro faz com que o movimento aconteça em relação ao registro do Bookmark.
+
+MoveFirst - move o ponteiro do registro para a primeira linha de dados do Recordset.
+
+MoveLast - move o ponteiro do registro para a última linha dos dados do Recordset.
+
+MoveNext - move o ponteiro do registro uma linha além de sua posição atual no conjunto de registros.
+
+MovePrevious - move o ponteiro do registro uma linha antes de sua posição atual no conjunto de registros.
+
+Você pode chamar esses métodos para processar registros programaticamente ou pode chamá-los em resposta a alguma ação do usuário, como clicar nos botões Próximo, Anterior, Primeiro ou Último.
+
+É possível mover o ponteiro do registro muito longe (ou seja, além do início ou fim do conjunto de registros) com os métodos Move, MoveNext e MovePrevious. Para ajudá-lo a evitar esse problema, cada conjunto de registros tem "registros de buffer" logo antes de sua primeira linha e logo após sua última linha. Quando você move o ponteiro do registro para um dos registros do buffer inicial ou final, nenhum erro ocorre, mas a propriedade booleana BOF (Before OF File) ou EOF (End Of File) do Recordset torna-se True.
+
+Você deve sempre testar a propriedade BOF imediatamente após chamar o método MovePrevious e a propriedade EOF após cada chamada para MoveNext, e você deve testar uma ou ambas as propriedades após chamar o método Move. Os exemplos na Listagem 8.10 apresentam código que você pode colocar nos procedimentos de evento Click para CommandButtons Next e Previous. (Observe a chamada para ReadFromData, um procedimento que o programador escreveu para preencher os controles com dados de campo do buffer de cópia do Recordset.)
+
+https://www.freetutes.com/learn-vb6-advanced/lesson8/p33.html

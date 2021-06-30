@@ -1,0 +1,3 @@
+formatar hora 
+
+Format(rsConsulta("Hora"), "hh:mm")

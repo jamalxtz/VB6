@@ -1,0 +1,146 @@
+'Define as variáveis
+Dim SQL
+Dim ValorTotalEstoque As Double
+Dim rsConsultaInventario As New Recordset
+
+'Monta a consulta SQL
+SQL = "SELECT SUM(VLRTotal) VLRTotal FROM(" & vbNewLine
+SQL = SQL & SQL
+SQL = SQL & ")AS SUB"
+
+'Verifica se o RecordSet está aberto, caso esteja ele é fechado e abre um novo
+If rsConsultaInventario.State = 1 Then rsConsulta.Close
+rsConsultaInventario.Open SQL, SAGEDLL.CNBDADOS, adOpenForwardOnly, adLockReadOnly
+SQL = ""
+
+'Verifica se o record set ainda não chegou na ultima posição (EOF - End Of File)
+'Também é possível verificar se a posição está antes de primeiro registro (BOF - Before Of File)
+If Not rsConsultaInventario.EOF Then
+	ValorTotalEstoque = ValorTotalEstoque + CDbl(rsConsultaInventario("VLRTotal"))
+End If
+
+'No Sage utiliza esse método para finalizar o recordset			
+RecordsetFinaliza rsConsultaInventario
+
+'No Project, ou algum outro lugar que o método não esteja presente, utiliza-se o comando .close
+rsConsultaInventario.close 'Fecha o RecordSet
+Set rsConsultaInventario = Nothing 'Remove da memória
+
+
+----------------------------------------------------------------------------------------------
+
+
+Banco de dados - o que significam os parâmetros do método recordset.Open?
+Se você olhar a ajuda do método Open do conjunto de registros, verá esta sintaxe listada:
+Código:
+conjunto de registros .Open Source , ActiveConnection , CursorType , LockType , Options
+Como a ajuda usa muitos termos técnicos para descrever o que todos eles significam (e contém opções avançadas), muitas pessoas ficam confusas ... então aqui está um guia mais simples para o uso "normal", que será mais fácil de entender!
+
+Observe que cada um deles pode ser definido usando propriedades separadas (por exemplo: conjunto de registros .Source = "tabela1" ), mas se você usar aqueles, você não deve especificar valores para eles para o método .Open também, pois isso pode causar erros!
+
+Mesmo que você não seja forçado a inserir valores para cada parâmetro, você ainda deve saber qual comportamento esperar e reduzir as chances de erros.
+
+
+Fonte
+Isso especifica quais dados você deseja no conjunto de registros.
+
+Pode ser uma variedade de coisas diferentes (como um objeto Command ou Stream), mas em termos simples, conterá:
+a) Um nome de tabela (você deve definir o parâmetro Options para adCmdTable ) ou:
+b) Uma instrução SQL (você deve definir o parâmetro Opções para adCmdText ), ou:
+c) O nome de uma Consulta de Acesso ou um Procedimento Armazenado (você deve definir o parâmetro Opções para adCmdStoredProc )
+
+Observe que se sua instrução SQL for uma consulta de ação (como Inserir ou atualização), você não deveestar usando um conjunto de registros - você deve usar o método .Execute de um objeto de conexão, por exemplo: objConn.Execute "INSERT INTO tabela1 (campo1) Valores (10)"
+
+
+Conexão ativa
+Especifica de qual banco de dados obter os dados.
+
+Você pode usar dois métodos diferentes:
+a) Um objeto Connection (como cn no tutorial ADO de Dee-u ) ou:
+b) Uma string de conexão (algo como "Provider = Microsoft.Jet.OLEDB.4.0; Data Source = c : \ meus documentos \ DB1.mdb ")
+
+A primeira opção é usada com mais freqüência, pois fornece mais recursos (como a capacidade de executar consultas de ação) e permite um melhor gerenciamento de memória.
+
+
+Tipo de
+cursor O tipo de cursor basicamente determina duas coisas:
+1) quais métodos você pode usar para se mover pelo conjunto de registros (.MoveFirst / .MoveNext / ..),
+2) se você vê as alterações nos dados que outros usuários fizeram desde que você abriu o conjunto de registros.
+
+Observe que isso também pode afetar se apropriedade .RecordCountdo conjunto de registros funcionar conforme o esperado. Se isso for importante para você, consulte o artigo Por que Recordcount às vezes é igual a -1?
+
+As opções estão listadas em ordem de eficiência, você deve usar a primeira que for adequada para você:
+adOpenForwardOnly
+Este é o padrão. É o mais rápido e usa a menor quantidade de memória e tráfego de rede.
+1) Você só pode usar .MoveNext para mover através dos registros (não .MoveFirst etc).
+2) Você não verá alterações nos dados por outros usuários desde que abriu o conjunto de registros.
+
+Usar esta opção significa que a propriedade .RecordCount não está disponível até que você alcance o último registro (ele retornará -1 antes disso), então você precisa usar a propriedade .EOF para ler todos os registros, por exemplo:
+Código:
+objRS.Open "SELECT field1 FROM table1", objConn, adOpenForwardOnly, adLockReadOnly, adCmdText
+Do while Not objRS.EOF
+  'fazer algo com os dados aqui!
+  Msgbox objRS.Fields ("campo1"). Valor
+
+  objRS.MoveNext
+Laço
+adOpenStatic
+1) Você pode usar qualquer um dos métodos .Move (.MoveFirst / .MovePrev / ..).
+2) Você não verá alterações nos dados por outros usuários desde que abriu o conjunto de registros.
+
+adOpenKeyset
+1) Você pode usar qualquer um dos métodos .Move (.MoveFirst / .MovePrev / ..).
+2) Você verá algumas alterações nos dados (somente registros editados / excluídos) por outros usuários desde que abriu o conjunto de registros.
+
+adOpenDynamic
+1) Você pode usar qualquer um dos métodos .Move (.MoveFirst / .MovePrev / ..).
+2) Você verá todas as alterações nos dados (registros adicionados / editados / excluídos) por outros usuários desde que você abriu o conjunto de registros.
+
+
+Tipo de
+bloqueio O tipo de bloqueio também determina duas coisas:
+1) se você pode fazer alterações nos dados (adicionar / editar / excluir),
+2) como outros usuários serão impedidos de editar o mesmo registro que você.
+
+Mais uma vez, eles estão listados em ordem de eficiência, você deve usar o primeiro que for apropriado para você.
+adLockReadOnly
+Este é o padrão. Tem o menor efeito sobre os outros usuários e é melhor em termos de velocidade / memória / uso da rede.
+1) Você não pode adicionar / editar / excluir dados, você só pode lê-los.
+2) Você não bloqueia outros usuários de editar registros na tabela.
+
+adLockOptimistic
+1) Você pode adicionar / editar / excluir dados.
+2) Quando você edita um registro, outro usuário pode editá-lo ao mesmo tempo - mas se ambos tentarem gravar os dados, um de vocês obterá um erro quando ocorrer o .Update .
+
+adLockPessimistic
+1) Você pode adicionar / editar / excluir dados.
+2) Quando você edita um registro, ele é imediatamente bloqueado para outros usuários. Ocorrerá um erro assim que algum valor for alterado no conjunto de registros (por exemplo:objRs.Fields ("Campo1"). Valor = 10 ).
+Dependendo do banco de dados que você está usando, isso pode bloquear vários registros, ao invés de apenas aquele que você está editando!
+
+
+Opções
+Especifica o comportamento extra que não é abordado diretamente pelos outros parâmetros.
+
+Geralmente você especificará apenas uma coisa, que é o que o parâmetro "Source" contém:
+a) Se Source for um nome de tabela, use: adCmdTable
+b) Se Source for uma instrução SQL, use: adCmdText
+c) Se Source for o nome de uma consulta / procedimento armazenado, use: adCmdStoredProc
+Observe que se você não definir isso, uma "melhor estimativa" será feita e você pode obter erros estranhos se a suposição errada for feita!
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Enquanto usar " Dim .. as New .. " economiza 1 linha de código, ele adiciona problemas que devem ser evitados.
+
+Em primeiro lugar, torna seu código mais lento, já que a variável não é criada imediatamente - em vez disso, toda vez que você usa essa variável, o VB verifica se ela já foi definida e se não foi definida.
+
+O problema da velocidade nem sempre é um grande problema, mas os outros são. Como a variável será definida a qualquer momento em que for usada, você pode facilmente (acidentalmente) definir o objeto novamente depois de descarregá-lo, para que ele permaneça na memória. Não apenas a memória é desperdiçada, mas as chances são de que seu código não esteja fazendo o que você pretendia - mas você não será informado por que, já que não haverá erro para dizer que o objeto não está definido (e provavelmente apenas observe se ele faz algo que é flagrantemente errado, o que nem sempre é o caso).
+
+Em vez de usar uma única linha " Dim variable as New DataType ", você deve usar linhas Dim e Set separadas como esta:
+Código:
+'Nada novo"! isso especifica o tipo de dados da variável e reserva a memória para ela 
+Dim variable as DataType 
+'isso cria uma nova instância do objeto e a coloca na variável 
+  Set variable = New DataType
+Quando terminar, descarregue-o (e libere a memória que foi usada) configurando-o como Nothing:
+Código:
+  Definir variável = Nada

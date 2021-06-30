@@ -1,0 +1,14 @@
+Como funciona os valores dos produtos
+
+- Ao acessar o Painel de Controle > Padrões é possível definir algumas configurações em relação ao preço dos produtos.
+- Segue algumas dessas configurações difíceis de entender sem os devidos testes:
+
+	- 'Fixar Valor Acréscimo'   = Fixa o valor percentual do acréscimo, desse modo, toda vez que o valor de custo for alterado, o valor de consumidor também irá aumentar de acordo com o acréscimo definido.
+	- 'Fixar Valor Consumidor'  = Fixa o valor de consumidor do produto, todas as vezes que o valor de custo for alterado, o sistema apenas irá ajustar o percentual de acréscimo para que fique compatível com o valor de consumidor que irá continuar o mesmo sempre.
+	- 'Calcular Valor por Fora' = Zera o percentual de acréscimo todas as vezes em que o valor de custo é alterado, deixando o valor de consumidor igual ao valor do custo do produto, assim, o usuário poderá definir o percentual de acréscimo que lhe convir.
+	
+	- 'Fixar Valor de Revendedor'   = O valor de revendedor não é alterado ao fazer um ajuste no valor de consumidor, alterando apenas o percentual de desconto para que fique compatível com o valor de revendedor que não será alterado.
+	- 'Fixar Valor de Distribuidor' = O valor de distribuidor não é alterado ao fazer um ajuste no valor de revendedor (O valor de distribuidor é calculado com base no valor de revendedor, portanto o percentual de desconto é referente ao valor de revendedor e não de consumidor), alterando apenas o percentual de desconto para que fique compatível com o valor de distribuidor que não será alterado.
+	
+	- 'Mínimo = Custo'        = Define o valor minimo do produto igual ao valor de custo.
+	- 'Mínimo = Distribuidor' = Define o valor minimo do produto igual ao valor de distribuidor.
